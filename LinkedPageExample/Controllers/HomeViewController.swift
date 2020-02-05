@@ -10,8 +10,18 @@ import UIKit
 
 final class HomeViewController: UIViewController {
     
-    var cachedCurrentViewControllerForPrepareHorizontalMove: ViewController?
+    static private func create(setIndex: Node) -> ViewController {
+        let vc =  UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "ViewController") as! ViewController
+        vc.node = setIndex
+        return vc
+    }
     
+    // MARK: - Properties
+    
+    var cachedCurrentViewControllerForPrepareHorizontalMove: ViewController?
+    var allVerticals: [PageViewControllerVertical] = []
+    var horizontal: PageViewControllerHorizontal?
+
     var firstHorizontalPages: [ViewController] {
         return
             [createFirstHorizontals(verticalIndex: 0),
@@ -19,8 +29,7 @@ final class HomeViewController: UIViewController {
              createFirstHorizontals(verticalIndex: 2)]
     }
     
-    var allVerticals: [PageViewControllerVertical] = []
-    
+    /// All controllers inside that grid
     let allPages = [
         [HomeViewController.create(setIndex: Node(x: 0, y: 0)),
          HomeViewController.create(setIndex: Node(x: 0, y: 1)),
@@ -35,19 +44,7 @@ final class HomeViewController: UIViewController {
          HomeViewController.create(setIndex: Node(x: 2, y: 2))]
     ]
     
-    var horizontal: PageViewControllerHorizontal?
-    
-    private func createFirstHorizontals(verticalIndex: Int) -> ViewController {
-        let activityController =  UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "ViewController") as! ViewController
-        configureVerticalPageViewController(inside: activityController, with: allPages[verticalIndex])
-        return activityController
-    }
-    
-    static private func create(setIndex: Node) -> ViewController {
-        let vc =  UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "ViewController") as! ViewController
-        vc.node = setIndex
-        return vc
-    }
+    // MARK: Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,7 +52,17 @@ final class HomeViewController: UIViewController {
         configureHorizontalPageViewController(inside: self, with: firstHorizontalPages)
     }
     
-    private func configureVerticalPageViewController(inside controller: UIViewController, with pages: [UIViewController]) {
+}
+
+extension HomeViewController {
+    
+    fileprivate func createFirstHorizontals(verticalIndex: Int) -> ViewController {
+        let activityController =  UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "ViewController") as! ViewController
+        configureVerticalPageViewController(inside: activityController, with: allPages[verticalIndex])
+        return activityController
+    }
+    
+    fileprivate func configureVerticalPageViewController(inside controller: UIViewController, with pages: [UIViewController]) {
         let verticalViewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "PageViewControllerVertical") as! PageViewControllerVertical
         verticalViewController.delegate = self
         verticalViewController.pages = pages
@@ -65,7 +72,7 @@ final class HomeViewController: UIViewController {
         allVerticals.append(verticalViewController)
     }
     
-    private func configureHorizontalPageViewController(inside controller: UIViewController, with pages: [UIViewController]) {
+    fileprivate func configureHorizontalPageViewController(inside controller: UIViewController, with pages: [UIViewController]) {
         let horizontalViewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(identifier: "PageViewControllerHorizontal") as! PageViewControllerHorizontal
         horizontalViewController.delegate = self
         horizontalViewController.pages = pages
@@ -88,6 +95,10 @@ extension HomeViewController: UIPageViewControllerDelegate {
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        
+        defer {
+            cachedCurrentViewControllerForPrepareHorizontalMove = nil
+        }
         
         guard let previousVC = previousViewControllers.first as? ViewController else {
             return
@@ -115,7 +126,6 @@ extension HomeViewController: UIPageViewControllerDelegate {
                 }
             }
         }
-        cachedCurrentViewControllerForPrepareHorizontalMove = nil
     }
     
 }
